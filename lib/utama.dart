@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'komenfull.dart';  // Import halaman detail komentar
+import 'komenfull.dart';
 
 class Utama extends StatefulWidget {
   @override
@@ -11,6 +11,7 @@ class Utama extends StatefulWidget {
 
 class _UtamaState extends State<Utama> {
   String _nama = '';
+  bool _isAdmin = false;
   List _komentarList = [];
 
   @override
@@ -24,6 +25,7 @@ class _UtamaState extends State<Utama> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _nama = prefs.getString('nama') ?? 'Pengguna';
+      _isAdmin = prefs.getBool('isAdmin') ?? false;
     });
   }
 
@@ -77,7 +79,7 @@ class _UtamaState extends State<Utama> {
               onPressed: () async {
                 final result = await Navigator.pushNamed(context, '/komen');
                 if (result == true) {
-                  _fetchKomentar();  // Perbarui daftar komentar setelah kembali dari halaman Komen
+                  _fetchKomentar();
                 }
               },
               child: Text('Tambah Komentar'),
@@ -101,13 +103,19 @@ class _UtamaState extends State<Utama> {
                         ],
                       ),
                       trailing: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
+                        onPressed: () async {
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => KomenFull(komentar: komentar),
+                              builder: (context) => KomenFull(
+                                komentar: komentar,
+                                isAdmin: _isAdmin,
+                              ),
                             ),
                           );
+                          if (result == true) {
+                            _fetchKomentar(); // Perbarui daftar komentar setelah kembali dari KomenFull
+                          }
                         },
                         child: Text('Lihat'),
                       ),

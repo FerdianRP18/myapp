@@ -18,13 +18,15 @@ class _MasukState extends State<Masuk> {
 
     if (email == 'admin' && password == 'admin') {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('nama', 'Admin'); // Simpan nama admin ke SharedPreferences
+      await prefs.setString(
+          'nama', 'Admin'); // Simpan nama admin ke SharedPreferences
       await prefs.setBool('isAdmin', true); // Tandai pengguna sebagai admin
 
       Navigator.pushReplacementNamed(context, '/utama');
     } else {
       // Jika bukan admin, lakukan pengecekan menggunakan API
-      final url = Uri.parse('https://668d45b1099db4c579f2609f.mockapi.io/ac/user');
+      final url =
+          Uri.parse('https://668d45b1099db4c579f2609f.mockapi.io/ac/user');
 
       try {
         final response = await http.get(url);
@@ -64,26 +66,48 @@ class _MasukState extends State<Masuk> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login'),
+        title: Text('TanyaTukang'),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+            colors: [Colors.blue, Colors.purple],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          )),
+        ),
       ),
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            // Gambar di tengah-tengah kolom
+            Image.asset(
+              'assets/Grup.png', // Ubah lokasi dan nama gambar sesuai kebutuhan Anda
+              width: 150.0,
+              height: 150.0,
+            ),
+            SizedBox(height: 20.0),
+            // Input Email
             TextField(
               controller: _emailController,
               decoration: InputDecoration(labelText: 'Email'),
             ),
+            SizedBox(height: 10.0),
+            // Input Password
             TextField(
               controller: _passwordController,
               decoration: InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 20.0),
+            // Tombol Login
             ElevatedButton(
               onPressed: _login,
               child: Text('Login'),
             ),
+            SizedBox(height: 10.0),
+            // Tombol untuk menuju halaman pendaftaran
             TextButton(
               onPressed: () {
                 Navigator.pushNamed(context, '/daftar');
