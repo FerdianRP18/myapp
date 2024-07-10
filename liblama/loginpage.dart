@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'loginpage.dart';
-import 'shared_preferences_util.dart';
+import 'shared_preferences_util.dart' as sp;
 
-class RegisterPage extends StatefulWidget {
+class LoginPage extends StatefulWidget {
   @override
-  _RegisterPageState createState() => _RegisterPageState();
+  _LoginPageState createState() => _LoginPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -19,39 +18,34 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  void _register() async {
+  void _login() async {
     if (_formKey.currentState!.validate()) {
       final email = _emailController.text;
       final password = _passwordController.text;
 
-      // Simpan email dan password ke shared_preferences
-      await saveCredentials(email, password);
+      final user = await sp.SharedPreferencesUtil.getUser(email);
 
-      // Simpan token ke shared_preferences
-      await saveToken('some_generated_token'); // Ganti dengan logika generasi token yang sebenarnya
-
-      // Tampilkan pesan popup
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Registration Successful'),
-            content: Text('Your account has been created successfully.'),
+      if (user != null && user['password'] == password) {
+        await sp.SharedPreferencesUtil.saveToken(email);
+        Navigator.of(context).pushReplacementNamed(
+          '/home',
+          arguments: {'role': user['role']},
+        );
+      } else {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Error'),
+            content: Text('Invalid email or password'),
             actions: [
               TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginPage()),
-                  );
-                },
-                child: Text('Back to Login'),
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('OK'),
               ),
             ],
-          );
-        },
-      );
+          ),
+        );
+      }
     }
   }
 
@@ -59,7 +53,7 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Register'),
+        title: Text('Login'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -95,17 +89,14 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               SizedBox(height: 20),
               ElevatedButton(
-                onPressed: _register,
-                child: Text('Register'),
+                onPressed: _login,
+                child: Text('Login'),
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginPage()),
-                  );
+                  Navigator.of(context).pushNamed('/register');
                 },
-                child: Text('Already have an account? Login'),
+                child: Text('Register'),
               ),
             ],
           ),
