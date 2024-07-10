@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 
-
 class Komen extends StatefulWidget {
   @override
   _KomenState createState() => _KomenState();
@@ -31,7 +30,11 @@ class _KomenState extends State<Komen> {
   void _submitKomentar() async {
     final lokasi = _lokasiController.text;
     final komentar = _komentarController.text;
-    final createdAt = DateTime.now().toIso8601String();
+    final createdAt = DateTime.now();
+
+    // Format tanggal ke dalam string menggunakan DateFormat
+    final formatter = DateFormat('dd MMMM yyyy HH:mm:ss');
+    final formattedDate = formatter.format(createdAt);
 
     // Validasi input
     if (lokasi.isEmpty || komentar.isEmpty) {
@@ -52,7 +55,7 @@ class _KomenState extends State<Komen> {
           'nama': _nama,
           'lokasi': lokasi,
           'komentar': komentar,
-          'createdAt': createdAt,
+          'createdAt': formattedDate, // Gunakan tanggal yang diformat
         }),
       );
 
@@ -60,7 +63,7 @@ class _KomenState extends State<Komen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Komentar berhasil dikirim'),
         ));
-        Navigator.pop(context);
+        Navigator.pop(context, true);  // Kembali ke halaman sebelumnya dengan hasil true
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Gagal mengirim komentar'),

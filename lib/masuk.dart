@@ -16,39 +16,47 @@ class _MasukState extends State<Masuk> {
     final email = _emailController.text;
     final password = _passwordController.text;
 
-    // API endpoint untuk login
-    final url = Uri.parse('https://668d45b1099db4c579f2609f.mockapi.io/ac/user');
+    if (email == 'admin' && password == 'admin') {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('nama', 'Admin'); // Simpan nama admin ke SharedPreferences
+      await prefs.setBool('isAdmin', true); // Tandai pengguna sebagai admin
 
-    try {
-      final response = await http.get(url);
+      Navigator.pushReplacementNamed(context, '/utama');
+    } else {
+      // Jika bukan admin, lakukan pengecekan menggunakan API
+      final url = Uri.parse('https://668d45b1099db4c579f2609f.mockapi.io/ac/user');
 
-      if (response.statusCode == 200) {
-        final List users = json.decode(response.body);
+      try {
+        final response = await http.get(url);
 
-        final user = users.firstWhere(
-          (user) => user['email'] == email && user['password'] == password,
-          orElse: () => null,
-        );
+        if (response.statusCode == 200) {
+          final List users = json.decode(response.body);
 
-        if (user != null) {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          await prefs.setString('nama', user['nama']);
+          final user = users.firstWhere(
+            (user) => user['email'] == email && user['password'] == password,
+            orElse: () => null,
+          );
 
-          Navigator.pushReplacementNamed(context, '/utama');
+          if (user != null) {
+            SharedPreferences prefs = await SharedPreferences.getInstance();
+            await prefs.setString('nama', user['nama']);
+
+            Navigator.pushReplacementNamed(context, '/utama');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Email atau password salah'),
+            ));
+          }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Email atau password salah'),
+            content: Text('Gagal terhubung ke server'),
           ));
         }
-      } else {
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Gagal terhubung ke server'),
+          content: Text('Terjadi kesalahan: $e'),
         ));
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Terjadi kesalahan: $e'),
-      ));
     }
   }
 

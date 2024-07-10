@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'komenfull.dart';  // Import halaman detail komentar
 
 class Utama extends StatefulWidget {
   @override
@@ -10,13 +11,13 @@ class Utama extends StatefulWidget {
 
 class _UtamaState extends State<Utama> {
   String _nama = '';
-  List<dynamic> _komentar = [];
+  List _komentarList = [];
 
   @override
   void initState() {
     super.initState();
     _loadNama();
-    _loadKomentar();
+    _fetchKomentar();
   }
 
   Future<void> _loadNama() async {
@@ -26,7 +27,7 @@ class _UtamaState extends State<Utama> {
     });
   }
 
-  Future<void> _loadKomentar() async {
+  Future<void> _fetchKomentar() async {
     final url = Uri.parse('https://668d45b1099db4c579f2609f.mockapi.io/ac/comments');
 
     try {
@@ -34,11 +35,11 @@ class _UtamaState extends State<Utama> {
 
       if (response.statusCode == 200) {
         setState(() {
-          _komentar = json.decode(response.body);
+          _komentarList = json.decode(response.body);
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Gagal memuat komentar'),
+          content: Text('Gagal mengambil komentar'),
         ));
       }
     } catch (e) {
@@ -48,17 +49,17 @@ class _UtamaState extends State<Utama> {
     }
   }
 
-  void _logout() async {
+  Future<void> _logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-    Navigator.pushReplacementNamed(context, '/');
+    Navigator.pushReplacementNamed(context, '/masuk');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+        title: Text('Halaman Utama'),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.logout),
@@ -66,30 +67,57 @@ class _UtamaState extends State<Utama> {
           ),
         ],
       ),
-      body: Column(
-        children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text('Selamat datang, $_nama!', style: TextStyle(fontSize: 20)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/komen');
-            },
-            child: Text('Tambah Komentar'),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _komentar.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(_komentar[index]['lokasi']),
-                  subtitle: Text(_komentar[index]['komentar']),
-                );
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          children: <Widget>[
+            Text('Selamat datang, $_nama'),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                final result = await Navigator.pushNamed(context, '/komen');
+                if (result == true) {
+                  _fetchKomentar();  // Perbarui daftar komentar setelah kembali dari halaman Komen
+                }
               },
+              child: Text('Tambah Komentar'),
             ),
-          ),
-        ],
+            SizedBox(height: 20),
+            Expanded(
+              child: ListView.builder(
+                itemCount: _komentarList.length,
+                itemBuilder: (context, index) {
+                  final komentar = _komentarList[index];
+                  return Card(
+                    margin: EdgeInsets.symmetric(vertical: 10),
+                    child: ListTile(
+                      title: Text('Nama: ${komentar['nama']}'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Tanggal: ${komentar['createdAt']}'),
+                          Text('Lokasi: ${komentar['lokasi']}'),
+                          Text('Komentar: ${komentar['komentar']}'),
+                        ],
+                      ),
+                      trailing: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => KomenFull(komentar: komentar),
+                            ),
+                          );
+                        },
+                        child: Text('Lihat'),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
